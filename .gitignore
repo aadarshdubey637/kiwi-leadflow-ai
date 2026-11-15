@@ -35,3 +35,6 @@ Thumbs.db
 # ---- demo recordings can be large; add them to the repo deliberately, not by accident ----
 *.webm
 *.mp4
+
+# built frontend copied in by the Docker image / local deploy test
+backend/static/

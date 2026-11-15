@@ -78,4 +78,4 @@ The design already has the hooks: every enquiry has a `source` column, there is 
 | *Is the lead score "AI"?* | The AI extracts the facts that feed it; the arithmetic is deterministic and shown to the admin with an explanation. |
 | *What if both providers are down?* | The enquiry is saved, marked failed with the reason, and retryable from the UI; nothing is lost. |
 | *How do you stop a customer manipulating the AI?* | Delimited untrusted input, injection phrases flagged, schema-bound output, decisions in code. There is a test and a live run for it. |
-| *How do you know it works?* | 178 automated tests plus live runs against the real APIs with English, Hindi, Hinglish, vague, duplicate and injection enquiries. |
+| *How do you know it works?* | 189 automated tests plus live runs against the real APIs with English, Hindi, Hinglish, vague, duplicate and injection enquiries. |

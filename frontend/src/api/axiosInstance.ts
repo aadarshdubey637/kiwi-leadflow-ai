@@ -1,7 +1,10 @@
 import axios, { AxiosError } from 'axios'
 import { AUTH_EXPIRED_EVENT, tokenStore } from '@/auth/tokenStore'
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? 'http://127.0.0.1:8000'
+// Local dev: the backend runs separately (default below, override with VITE_API_BASE_URL).
+// Production build: the backend serves this app itself, so API calls go to the SAME origin ('' = relative URLs).
+const configuredBase = import.meta.env.VITE_API_BASE_URL as string | undefined
+export const API_BASE_URL = configuredBase !== undefined ? configuredBase.replace(/\/$/, '') : import.meta.env.PROD ? '' : 'http://127.0.0.1:8000'
 
 /** A user-presentable error. `message` is always safe to show; raw technical details never reach the UI. */
 export class ApiError extends Error {

@@ -1,7 +1,8 @@
 import logging
+import os
 from functools import lru_cache
 
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_JWT_SECRET = "change-me"
@@ -74,6 +75,23 @@ class Settings(BaseSettings):
     # --- Rate limiting (per client IP, per minute) ---
     rate_limit_enquiries_per_minute: int = 20
     rate_limit_login_per_minute: int = 10
+
+    @field_validator("database_url", mode="after")
+    @classmethod
+    def _normalise_database_url(cls, v: str) -> str:
+        """Hosts such as Render hand out `postgres://...` or `postgresql://...`; SQLAlchemy needs the driver named."""
+        for prefix in ("postgres://", "postgresql://"):
+            if v.startswith(prefix):
+                return "postgresql+psycopg://" + v[len(prefix):]
+        return v
+
+    @model_validator(mode="after")
+    def _default_frontend_url(self):
+        # On Render the app is served from RENDER_EXTERNAL_URL; use it for links in alert emails unless set explicitly.
+        external = os.environ.get("RENDER_EXTERNAL_URL")
+        if external and self.frontend_url == "http://localhost:5173":
+            self.frontend_url = external
+        return self
 
     @property
     def email_enabled(self) -> bool:

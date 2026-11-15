@@ -1,0 +1,18 @@
+# keep the image small and never copy secrets or local databases into it
+.git
+**/.env
+**/.env.*
+!**/.env.example
+**/*.db
+**/leadflow_backup*
+**/node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.vite
+**/dist
+backend/static
+demo
+docs
+scripts
+*.md

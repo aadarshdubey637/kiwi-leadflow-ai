@@ -11,6 +11,8 @@ _is_sqlite = settings.database_url.startswith("sqlite")
 engine = create_engine(
     settings.database_url,
     connect_args={"check_same_thread": False} if _is_sqlite else {},
+    # Hosted databases drop idle connections (e.g. a free instance waking from sleep): test before use, recycle often.
+    **({} if _is_sqlite else {"pool_pre_ping": True, "pool_recycle": 300}),
 )
 
 if _is_sqlite:
@@ -37,6 +39,8 @@ def ensure_schema(eng=None) -> list[str]:
     from sqlalchemy import inspect, text
 
     eng = eng or engine
+    if eng.dialect.name != "sqlite":
+        return []  # these ALTERs are SQLite-flavoured; a fresh PostgreSQL database is built complete by create_all (use Alembic later)
     insp = inspect(eng)
     wanted = {
         "enquiries": [

@@ -70,7 +70,7 @@ backend\.venv\Scripts\python scripts\seed_demo_data.py --statuses
 **Run the tests** (no API key or network needed — the LLM is mocked, email goes to a local test SMTP server):
 
 ```bash
-cd backend && python -m pytest -q        # 178 tests
+cd backend && python -m pytest -q        # 189 tests
 cd frontend && npm run build             # type-check + production build
 ```
 
@@ -118,6 +118,10 @@ The full list, with comments, is in [`backend/.env.example`](backend/.env.exampl
 
 ---
 
+## Deploy (Render, free)
+
+`render.yaml` + `Dockerfile` deploy the whole product as one service with a free PostgreSQL database; step-by-step guide and free-tier caveats in [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md). This exact setup was tested (real image, real PostgreSQL, real AI, browser end-to-end).
+
 ## How it works (short version)
 
 ```
@@ -138,7 +142,7 @@ Design choices worth knowing (details in [`docs/ARCHITECTURE.md`](docs/ARCHITECT
 | Layer | Choice | Why |
 |---|---|---|
 | Backend | Python **FastAPI** | Async I/O for LLM calls, automatic Swagger docs, Pydantic validation built in |
-| Database | **SQLite** via SQLAlchemy | Zero setup for a local demo; the models are PostgreSQL-compatible (`docs/schema.sql` has both dialects) |
+| Database | **SQLite** locally, **PostgreSQL** when deployed (SQLAlchemy) | Zero setup for a local demo; the same models run on PostgreSQL, tested in the Docker image (`docs/schema.sql` has both dialects) |
 | AI | **Groq** (`openai/gpt-oss-120b`) primary, **Google Gemini** (`gemini-2.5-flash`) fallback | Both have free tiers; a common provider interface makes them swappable |
 | Frontend | **React + Vite + TypeScript + Tailwind CSS** | Fast, typed, component-based |
 | Auth | JWT, PBKDF2 password hashing | Stateless; no extra service |
@@ -163,6 +167,7 @@ docs/           architecture, database (ERD + SQL), AI model, interview prep, de
 | [`docs/AI_MODEL.md`](docs/AI_MODEL.md) | Which models, prompt design, validation, scoring rules, cost and limits |
 | [`docs/INTERVIEW_PREP.md`](docs/INTERVIEW_PREP.md) | Answers to the eight interview questions, based on how this project really works |
 | [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) | A timed 2–3 minute demo walkthrough |
+| [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md) | Deploying to Render, with the free-tier caveats |
 | [`docs/openapi.json`](docs/openapi.json) · `/docs` | The REST API contract (also live in Swagger UI) |
 | [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) | Every submission requirement and where it is satisfied |
 | [`backend/README.md`](backend/README.md) · [`frontend/README.md`](frontend/README.md) | Component-level details and the API reference |
@@ -188,7 +193,7 @@ AI coding assistants (Claude) were used during development; the design decisions
 - **Free API tiers have rate limits.** The scheduler handles bursts gracefully, but a large burst takes minutes on the free tier. Failed analyses can be retried with one click.
 - **Email needs your SMTP details** (e.g. a Gmail app password). It is tested against a real local SMTP server, but a live send needs your credentials.
 - **WhatsApp is click-to-chat**, not the Business API (that needs an approved business account).
-- **SQLite and in-process background tasks** are right for a local demo; see `docs/ARCHITECTURE.md` for the production path (PostgreSQL + a job queue).
+- **In-process background tasks** are right for a demo (and run fine on Render); see `docs/ARCHITECTURE.md` for the production path (a durable job queue).
 - **Customers cannot track their own enquiry** — the backend has no public lookup endpoint.
 
 ## Troubleshooting

@@ -1,8 +1,13 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
@@ -53,3 +58,25 @@ for module in (
 @app.get("/health", tags=["System"])
 def health():
     return {"success": True, "data": {"status": "ok"}}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Optional: serve the built React app from this same server (used by the Docker image / Render, so the whole product
+# is ONE service on ONE URL, with no CORS or API-address configuration). Only active when a build exists in
+# backend/static (or STATIC_DIR); in local development Vite serves the frontend and this block does nothing.
+# ---------------------------------------------------------------------------------------------------------------
+STATIC_DIR = Path(os.environ.get("STATIC_DIR") or Path(__file__).resolve().parent.parent / "static").resolve()
+
+if (STATIC_DIR / "index.html").is_file():
+    if (STATIC_DIR / "assets").is_dir():
+        app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def spa(full_path: str):
+        """Single-page-app fallback: any non-API path serves index.html so deep links and refreshes work."""
+        if full_path.startswith(("api/", "docs", "redoc", "openapi.json")):
+            raise HTTPException(status_code=404, detail="Not found")  # unknown API paths stay a proper JSON 404
+        candidate = (STATIC_DIR / full_path).resolve()
+        if full_path and candidate.is_file() and STATIC_DIR in candidate.parents:  # e.g. /favicon.svg; blocks ../ traversal
+            return FileResponse(candidate)
+        return FileResponse(STATIC_DIR / "index.html", headers={"Cache-Control": "no-cache"})
