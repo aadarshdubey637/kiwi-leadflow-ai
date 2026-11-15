@@ -42,7 +42,7 @@ app/
   routes/     thin HTTP layer   services/ all business logic
     providers/  base interface + Gemini + Groq adapters
   utils/      json_parser, validators, helpers (sanitising, injection detection, secret scrubbing)
-  tests/      200 tests
+  tests/      203 tests
 ```
 Key decisions (good interview talking points):
 - **Original enquiry is saved first**, in its own commit, before any AI work — AI failure can never lose it.
@@ -160,7 +160,7 @@ Get-Content sample_data/enquiries.json -Raw -Encoding UTF8 | ConvertFrom-Json | 
 (Each enquiry uses 2 LLM calls — mind your provider's request limits.)
 
 ## Testing
-`python -m pytest -q` → 200 tests, no network. Covers: validation (name/email/phone/message), extraction (category, budget,
+`python -m pytest -q` → 203 tests, no network. Covers: validation (name/email/phone/message), extraction (category, budget,
 location, missing info, Hindi), invalid JSON, provider failure/timeout/rate-limit/exhausted quota, unsupported category,
 retries, fallback-only-when-needed, concurrency throttle, hallucination guard, scoring/priority/follow-up rules, duplicates
 (email/phone/text), full workflow + history, failure + retry without duplicates, DB constraints, dashboard/analytics/funnel/

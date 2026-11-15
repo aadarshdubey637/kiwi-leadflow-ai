@@ -32,6 +32,8 @@ Tested before writing this guide: the real `Dockerfile` was built and run in pro
 
 Every `git push` to the connected branch redeploys automatically.
 
+**Changing the admin password:** `ADMIN_PASSWORD` in Render is the source of truth. Edit it under the service's **Environment** tab, save (Render redeploys), and the admin's password is updated on the next start. Use a strong password: the site is public.
+
 ## Sharing an existing database safely
 
 `DATABASE_SCHEMA=leadflow` (set in `render.yaml`) makes every LeadFlow connection use its own PostgreSQL schema: the app creates the schema on first start and puts all 9 of its tables there. So you can point it at the free database you already use for another project and **nothing in that project's `public` schema is touched**, even if it has tables with the same names (`enquiries`, `admin_users`).

@@ -36,12 +36,25 @@ def create_admin(db: Session, username: str, email: str, password: str, role: st
 
 
 def seed_admin_from_env(db: Session) -> bool:
-    """Create the first admin from ADMIN_USERNAME/ADMIN_EMAIL/ADMIN_PASSWORD if it doesn't exist yet."""
+    """Make the bootstrap admin match ADMIN_USERNAME / ADMIN_EMAIL / ADMIN_PASSWORD. Returns True if anything changed.
+
+    - Admin missing  -> created.
+    - Admin exists but ADMIN_PASSWORD no longer matches its stored hash -> the password is updated. The environment variable
+      is the source of truth, so changing it in the host's dashboard (e.g. Render) and redeploying really changes the login.
+      (Before this, a changed ADMIN_PASSWORD was silently ignored once the admin existed, which locked people out.)
+    Only the account named by ADMIN_USERNAME is ever touched; all other users are left alone.
+    """
     s = get_settings()
     if not (s.admin_username and s.admin_email and s.admin_password):
         return False
-    if db.scalar(select(AdminUser).where(AdminUser.username == s.admin_username)):
-        return False
-    create_admin(db, s.admin_username, s.admin_email, s.admin_password)
-    logger.info("seeded admin user '%s'", s.admin_username)
-    return True
+    existing = db.scalar(select(AdminUser).where(AdminUser.username == s.admin_username))
+    if existing is None:
+        create_admin(db, s.admin_username, s.admin_email, s.admin_password)
+        logger.info("seeded admin user '%s'", s.admin_username)
+        return True
+    if not verify_password(s.admin_password, existing.password_hash):
+        existing.password_hash = hash_password(s.admin_password)
+        db.commit()
+        logger.info("admin '%s': password updated to match ADMIN_PASSWORD", s.admin_username)  # never log the password itself
+        return True
+    return False

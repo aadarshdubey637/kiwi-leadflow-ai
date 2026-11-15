@@ -145,3 +145,42 @@ def test_db_constraints_reject_bad_values(db_session):
     with pytest.raises(IntegrityError):
         db_session.commit()
     db_session.rollback()
+
+
+# ---------- ADMIN_PASSWORD is the source of truth for the bootstrap admin ----------
+def _admin_env(monkeypatch, password):
+    s = get_settings()
+    monkeypatch.setattr(s, "admin_username", "boss")
+    monkeypatch.setattr(s, "admin_email", "boss@example.com")
+    monkeypatch.setattr(s, "admin_password", password)
+
+
+def test_changing_admin_password_in_env_updates_an_existing_admin(db_session, monkeypatch):
+    _admin_env(monkeypatch, "first-password-1")
+    assert auth_service.seed_admin_from_env(db_session) is True  # created
+    assert auth_service.seed_admin_from_env(db_session) is False  # nothing changed: no needless rehash
+
+    _admin_env(monkeypatch, "Admin@123-new")  # e.g. edited in Render's dashboard, then redeployed
+    assert auth_service.seed_admin_from_env(db_session) is True
+    admin = db_session.scalar(select(AdminUser).where(AdminUser.username == "boss"))
+    assert verify_password("Admin@123-new", admin.password_hash) and not verify_password("first-password-1", admin.password_hash)
+    assert auth_service.seed_admin_from_env(db_session) is False  # stable again
+
+
+def test_password_sync_only_touches_the_configured_admin(db_session, admin, monkeypatch):
+    before = admin.password_hash  # the fixture's separate "admin" user
+    _admin_env(monkeypatch, "boss-password-1")
+    auth_service.seed_admin_from_env(db_session)
+    _admin_env(monkeypatch, "boss-password-2")
+    auth_service.seed_admin_from_env(db_session)
+    db_session.refresh(admin)
+    assert admin.password_hash == before  # other accounts are never modified by the sync
+
+
+def test_login_works_with_the_new_password_after_sync(anon_client, db_session, monkeypatch):
+    _admin_env(monkeypatch, "old-password-1")
+    auth_service.seed_admin_from_env(db_session)
+    _admin_env(monkeypatch, "new-password-2")
+    auth_service.seed_admin_from_env(db_session)
+    assert anon_client.post("/api/auth/login", json={"username": "boss", "password": "new-password-2"}).status_code == 200
+    assert anon_client.post("/api/auth/login", json={"username": "boss", "password": "old-password-1"}).status_code == 401

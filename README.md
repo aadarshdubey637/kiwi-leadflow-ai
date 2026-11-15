@@ -70,7 +70,7 @@ backend\.venv\Scripts\python scripts\seed_demo_data.py --statuses
 **Run the tests** (no API key or network needed — the LLM is mocked, email goes to a local test SMTP server):
 
 ```bash
-cd backend && python -m pytest -q        # 200 tests
+cd backend && python -m pytest -q        # 203 tests
 cd frontend && npm run build             # type-check + production build
 ```
 
@@ -198,4 +198,4 @@ AI coding assistants (Claude) were used during development; the design decisions
 
 - **Blank page at localhost:5173** — Vite's dev cache can get corrupted: stop `npm run dev`, delete `frontend/node_modules/.vite`, start it again.
 - **"AI failed" on an enquiry** — open it and press *Retry analysis*. Check the Workflow History page for the reason (usually a free-tier limit or a missing key).
-- **Login fails** — use the `ADMIN_USERNAME` / `ADMIN_PASSWORD` from `backend/.env` (the admin is created the first time the server starts).
+- **Login fails** — use the `ADMIN_USERNAME` / `ADMIN_PASSWORD` from `backend/.env` (or from Render's Environment tab when deployed). The admin is created on first start, and its password is re-synced from `ADMIN_PASSWORD` on every start, so after changing the value, restart/redeploy.
