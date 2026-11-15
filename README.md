@@ -155,7 +155,7 @@ backend/        FastAPI app (routes → services → models), tests, sample data
   app/services/providers/   Groq + Gemini adapters behind one interface
 frontend/       React admin console + public customer site
 scripts/        seed_demo_data.py, start-dev.ps1, export_docs.py
-docs/           architecture, database (ERD + SQL), AI model, interview prep, demo script, OpenAPI spec
+docs/           architecture, database (ERD + SQL), AI model, deployment guide, OpenAPI spec
 ```
 
 ## Documentation
@@ -165,8 +165,6 @@ docs/           architecture, database (ERD + SQL), AI model, interview prep, de
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System architecture, workflow, failure handling, scaling |
 | [`docs/DATABASE.md`](docs/DATABASE.md) · [`docs/schema.sql`](docs/schema.sql) | ER diagram, table descriptions, full SQL schema (SQLite + PostgreSQL) |
 | [`docs/AI_MODEL.md`](docs/AI_MODEL.md) | Which models, prompt design, validation, scoring rules, cost and limits |
-| [`docs/INTERVIEW_PREP.md`](docs/INTERVIEW_PREP.md) | Answers to the eight interview questions, based on how this project really works |
-| [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) | A timed 2–3 minute demo walkthrough |
 | [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md) | Deploying to Render, with the free-tier caveats |
 | [`docs/openapi.json`](docs/openapi.json) · `/docs` | The REST API contract (also live in Swagger UI) |
 | [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) | Every submission requirement and where it is satisfied |

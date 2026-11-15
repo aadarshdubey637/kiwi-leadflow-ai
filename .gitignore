@@ -38,3 +38,6 @@ Thumbs.db
 
 # built frontend copied in by the Docker image / local deploy test
 backend/static/
+
+# personal notes (interview prep, demo script): kept locally, never committed
+private/

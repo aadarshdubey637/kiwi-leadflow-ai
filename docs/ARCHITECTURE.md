@@ -132,7 +132,7 @@ Every box above writes a row to `workflow_logs` (status, duration, error text). 
 | Background work | FastAPI background tasks in one process | A durable queue (Redis + RQ/Celery or a Postgres-backed queue) with several workers; the idempotent, atomically-claimed workflow already supports this |
 | Database | SQLite (single writer) | PostgreSQL — models and `docs/schema.sql` already target it; add Alembic for migrations |
 | LLM limits | Scheduler: routes / queues around free-tier limits | Paid or higher tier, or a self-hosted model; the same scheduler then uses the higher limits (`AI_TPM_LIMITS`, `AI_RPM_LIMITS`) |
-| Cost | ~2 calls/enquiry, low reasoning effort, rules instead of LLM wherever possible | Merge the two calls into one, cache near-duplicate messages, use a small model for classification — see `docs/INTERVIEW_PREP.md` |
+| Cost | ~2 calls/enquiry, low reasoning effort, rules instead of LLM wherever possible | Merge the two calls into one, cache near-duplicate messages, use a small model for classification |
 | Observability | `ai_usage` table, monitoring page, workflow logs | Add metrics/alerts (queue depth, failure rate, latency, cost per enquiry) |
 | Reads | Indexed columns, server-side pagination and filtering | Unchanged; add a read replica only if needed |
 
