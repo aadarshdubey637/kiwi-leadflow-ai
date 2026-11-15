@@ -1,0 +1,124 @@
+erDiagram
+    admin_users |o--o{ enquiries : "assigned_to_id"
+    enquiries |o--o{ enquiries : "duplicate_of_id"
+    enquiries ||--o| ai_analysis : "enquiry_id"
+    enquiries ||--o| ai_responses : "enquiry_id"
+    enquiries |o--o{ ai_usage : "enquiry_id"
+    enquiries ||--o{ communications : "enquiry_id"
+    admin_users |o--o{ communications : "sent_by_id"
+    enquiries ||--o{ followups : "enquiry_id"
+    enquiries ||--o| lead_scores : "enquiry_id"
+    enquiries ||--o{ workflow_logs : "enquiry_id"
+    admin_users {
+        INTEGER id PK
+        VARCHAR username UK
+        VARCHAR email UK
+        VARCHAR password_hash
+        VARCHAR role
+        BOOLEAN is_active
+        DATETIME created_at
+    }
+    enquiries {
+        INTEGER id PK
+        VARCHAR customer_name
+        VARCHAR phone
+        VARCHAR email
+        TEXT message
+        VARCHAR source
+        VARCHAR status
+        VARCHAR ai_status
+        VARCHAR priority
+        TEXT priority_reason
+        BOOLEAN needs_manual_review
+        INTEGER assigned_to_id FK
+        DATETIME assigned_at
+        INTEGER duplicate_of_id FK
+        VARCHAR duplicate_reason
+        DATETIME created_at
+        DATETIME updated_at
+    }
+    ai_analysis {
+        INTEGER id PK
+        INTEGER enquiry_id FK UK
+        VARCHAR service_category
+        VARCHAR customer_location
+        NUMERIC budget
+        VARCHAR currency
+        VARCHAR urgency
+        VARCHAR project_timeline
+        JSON project_requirements
+        JSON missing_information
+        TEXT summary
+        VARCHAR customer_intent
+        VARCHAR sentiment
+        VARCHAR detected_language
+        FLOAT confidence_score
+        DATETIME created_at
+    }
+    ai_responses {
+        INTEGER id PK
+        INTEGER enquiry_id FK UK
+        TEXT generated_response
+        TEXT edited_response
+        JSON followup_questions
+        DATETIME created_at
+        DATETIME updated_at
+    }
+    ai_usage {
+        INTEGER id PK
+        INTEGER enquiry_id FK
+        VARCHAR provider
+        VARCHAR model_name
+        VARCHAR task
+        INTEGER attempt
+        INTEGER input_tokens
+        INTEGER output_tokens
+        FLOAT response_time
+        NUMERIC estimated_cost
+        VARCHAR execution_status
+        VARCHAR error_message
+        DATETIME created_at
+    }
+    communications {
+        INTEGER id PK
+        INTEGER enquiry_id FK
+        VARCHAR channel
+        VARCHAR kind
+        VARCHAR recipient
+        VARCHAR subject
+        TEXT body
+        VARCHAR status
+        VARCHAR error
+        INTEGER sent_by_id FK
+        DATETIME created_at
+    }
+    followups {
+        INTEGER id PK
+        INTEGER enquiry_id FK
+        TEXT suggested_action
+        DATETIME suggested_date
+        VARCHAR status
+        DATETIME created_at
+    }
+    lead_scores {
+        INTEGER id PK
+        INTEGER enquiry_id FK UK
+        INTEGER total_score
+        INTEGER budget_score
+        INTEGER requirement_clarity_score
+        INTEGER urgency_score
+        INTEGER service_relevance_score
+        INTEGER engagement_score
+        VARCHAR lead_temperature
+        TEXT scoring_explanation
+        DATETIME created_at
+    }
+    workflow_logs {
+        INTEGER id PK
+        INTEGER enquiry_id FK
+        VARCHAR workflow_step
+        VARCHAR execution_status
+        TEXT message
+        FLOAT execution_time
+        DATETIME created_at
+    }

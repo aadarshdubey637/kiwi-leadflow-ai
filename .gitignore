@@ -1,0 +1,37 @@
+# ---- SECRETS: never commit these (API keys, passwords, JWT secret live here) ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---- local databases and backups (they contain whatever enquiries you typed in) ----
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+leadflow_backup*
+
+# ---- dependencies and build output ----
+node_modules/
+.venv/
+venv/
+dist/
+build/
+__pycache__/
+*.pyc
+.pytest_cache/
+.vite/
+*.tsbuildinfo
+
+# ---- logs, editor and OS files ----
+*.log
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---- demo recordings can be large; add them to the repo deliberately, not by accident ----
+*.webm
+*.mp4

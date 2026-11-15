@@ -1,0 +1,4275 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LeadFlow AI",
+    "description": "AI-powered lead management & workflow automation backend.\n\nPublic: `POST /api/enquiries`, `POST /api/auth/login`. Everything else needs a Bearer token (use the **Authorize** button after logging in).",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Login",
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TokenOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Me",
+        "operationId": "me_api_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_AdminOut_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/enquiries": {
+      "post": {
+        "tags": [
+          "Enquiries"
+        ],
+        "summary": "Submit Enquiry",
+        "description": "PUBLIC. Saves the original enquiry, auto-assigns it to a team member, then runs the AI workflow in the background.",
+        "operationId": "submit_enquiry_api_enquiries_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnquiryCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_EnquiryOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Enquiries"
+        ],
+        "summary": "List Enquiries",
+        "operationId": "list_enquiries_api_enquiries_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Name, email, phone, message or AI summary",
+              "title": "Search"
+            },
+            "description": "Name, email, phone, message or AI summary"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "New",
+                    "In Progress",
+                    "Converted",
+                    "Closed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "Low",
+                    "Medium",
+                    "High"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Priority"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "Website Development",
+                    "Mobile Application Development",
+                    "AI Software Development",
+                    "Digital Marketing",
+                    "E-commerce Development",
+                    "Custom Software Development",
+                    "Other Services"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "temperature",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "Hot",
+                    "Warm",
+                    "Cold"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Temperature"
+            }
+          },
+          {
+            "name": "ai_status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending",
+                    "processing",
+                    "completed",
+                    "failed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ai Status"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "name": "assignee_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only enquiries assigned to this team member",
+              "title": "Assignee Id"
+            },
+            "description": "Only enquiries assigned to this team member"
+          },
+          {
+            "name": "unassigned",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Only enquiries with no assignee",
+              "default": false,
+              "title": "Unassigned"
+            },
+            "description": "Only enquiries with no assignee"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paginated_EnquiryOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enquiries/export": {
+      "get": {
+        "tags": [
+          "Enquiries"
+        ],
+        "summary": "Export Enquiries",
+        "operationId": "export_enquiries_api_enquiries_export_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "csv",
+                "xlsx"
+              ],
+              "type": "string",
+              "description": "csv or xlsx (Excel)",
+              "default": "csv",
+              "title": "Format"
+            },
+            "description": "csv or xlsx (Excel)"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Name, email, phone, message or AI summary",
+              "title": "Search"
+            },
+            "description": "Name, email, phone, message or AI summary"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "New",
+                    "In Progress",
+                    "Converted",
+                    "Closed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "Low",
+                    "Medium",
+                    "High"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Priority"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "Website Development",
+                    "Mobile Application Development",
+                    "AI Software Development",
+                    "Digital Marketing",
+                    "E-commerce Development",
+                    "Custom Software Development",
+                    "Other Services"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "temperature",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "Hot",
+                    "Warm",
+                    "Cold"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Temperature"
+            }
+          },
+          {
+            "name": "ai_status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending",
+                    "processing",
+                    "completed",
+                    "failed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ai Status"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "name": "assignee_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only enquiries assigned to this team member",
+              "title": "Assignee Id"
+            },
+            "description": "Only enquiries assigned to this team member"
+          },
+          {
+            "name": "unassigned",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Only enquiries with no assignee",
+              "default": false,
+              "title": "Unassigned"
+            },
+            "description": "Only enquiries with no assignee"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV or Excel file",
+            "content": {
+              "text/csv": {},
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enquiries/{enquiry_id}": {
+      "get": {
+        "tags": [
+          "Enquiries"
+        ],
+        "summary": "Get Enquiry",
+        "operationId": "get_enquiry_api_enquiries__enquiry_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "enquiry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Enquiry Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_EnquiryDetail_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enquiries/{enquiry_id}/status": {
+      "put": {
+        "tags": [
+          "Enquiries"
+        ],
+        "summary": "Update Status",
+        "operationId": "update_status_api_enquiries__enquiry_id__status_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "enquiry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Enquiry Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnquiryStatusUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_EnquiryOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enquiries/{enquiry_id}/assignee": {
+      "put": {
+        "tags": [
+          "Enquiries"
+        ],
+        "summary": "Set Assignee",
+        "description": "Manually (re)assign an enquiry, or unassign it with `assignee_id: null`.",
+        "operationId": "set_assignee_api_enquiries__enquiry_id__assignee_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "enquiry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Enquiry Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssigneeUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_EnquiryOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enquiries/{enquiry_id}/auto-assign": {
+      "post": {
+        "tags": [
+          "Enquiries"
+        ],
+        "summary": "Auto Assign",
+        "description": "Run the automatic assignment rules again (e.g. after adding team members).",
+        "operationId": "auto_assign_api_enquiries__enquiry_id__auto_assign_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "enquiry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Enquiry Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_EnquiryOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enquiries/{enquiry_id}/reanalyze": {
+      "post": {
+        "tags": [
+          "Enquiries"
+        ],
+        "summary": "Reanalyze",
+        "description": "Retry AI processing (e.g. after a failure). Safe to repeat: records are updated, never duplicated.",
+        "operationId": "reanalyze_api_enquiries__enquiry_id__reanalyze_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "enquiry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Enquiry Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_EnquiryOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enquiries/{enquiry_id}/response": {
+      "put": {
+        "tags": [
+          "Enquiries"
+        ],
+        "summary": "Edit Response",
+        "operationId": "edit_response_api_enquiries__enquiry_id__response_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "enquiry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Enquiry Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_ResponseOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enquiries/{enquiry_id}/send-email": {
+      "post": {
+        "tags": [
+          "Enquiries"
+        ],
+        "summary": "Send Email",
+        "description": "Email the reply to the customer over SMTP (the edited reply if there is one). 409 if SMTP is not configured.",
+        "operationId": "send_email_api_enquiries__enquiry_id__send_email_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "enquiry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Enquiry Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_CommunicationOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enquiries/{enquiry_id}/whatsapp": {
+      "post": {
+        "tags": [
+          "Enquiries"
+        ],
+        "summary": "Whatsapp",
+        "description": "Prepare a WhatsApp click-to-chat link with the reply pre-filled and log it. The admin presses send in WhatsApp.",
+        "operationId": "whatsapp_api_enquiries__enquiry_id__whatsapp_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "enquiry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Enquiry Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsAppRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_WhatsAppOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/stats": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Stats",
+        "operationId": "stats_api_dashboard_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_DashboardStats_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/dashboard/categories": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Categories",
+        "operationId": "categories_api_dashboard_categories_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_list_CountItem__"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/dashboard/priorities": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Priorities",
+        "operationId": "priorities_api_dashboard_priorities_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_list_CountItem__"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/analytics/leads": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Leads",
+        "operationId": "leads_api_analytics_leads_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_LeadDistribution_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/analytics/conversion": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Conversion",
+        "operationId": "conversion_api_analytics_conversion_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_ConversionStats_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/analytics/funnel": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Funnel",
+        "operationId": "funnel_api_analytics_funnel_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_list_FunnelStage__"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/analytics/trends": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Trends",
+        "operationId": "trends_api_analytics_trends_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "daily",
+                "weekly",
+                "monthly"
+              ],
+              "type": "string",
+              "default": "daily",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 366,
+              "minimum": 1,
+              "default": 30,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_list_TrendPoint__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/pipeline": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Pipeline",
+        "description": "Estimated pipeline value from stated budgets of open enquiries — not revenue.",
+        "operationId": "pipeline_api_analytics_pipeline_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_PipelineValue_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/workflows": {
+      "get": {
+        "tags": [
+          "Workflows"
+        ],
+        "summary": "List Workflow Logs",
+        "operationId": "list_workflow_logs_api_workflows_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "started",
+                    "success",
+                    "failed",
+                    "skipped"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "step",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Step"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paginated_WorkflowLogOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workflows/{enquiry_id}": {
+      "get": {
+        "tags": [
+          "Workflows"
+        ],
+        "summary": "Enquiry Timeline",
+        "description": "Chronological execution history for one enquiry (oldest first) — feeds the timeline UI.",
+        "operationId": "enquiry_timeline_api_workflows__enquiry_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "enquiry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Enquiry Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_list_WorkflowLogOut__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/monitoring/ai-usage": {
+      "get": {
+        "tags": [
+          "Monitoring"
+        ],
+        "summary": "Ai Usage",
+        "operationId": "ai_usage_api_monitoring_ai_usage_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_AIUsageStats_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/monitoring/performance": {
+      "get": {
+        "tags": [
+          "Monitoring"
+        ],
+        "summary": "Performance",
+        "operationId": "performance_api_monitoring_performance_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_PerformanceStats_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/team": {
+      "get": {
+        "tags": [
+          "Team"
+        ],
+        "summary": "List Team",
+        "description": "Everyone who can be assigned enquiries, with their current open workload.",
+        "operationId": "list_team_api_team_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_list_TeamMemberOut__"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Team"
+        ],
+        "summary": "Create Team Member",
+        "description": "Admin only. New members start receiving automatic assignments immediately.",
+        "operationId": "create_team_member_api_team_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeamMemberCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TeamMemberOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/team/{member_id}": {
+      "put": {
+        "tags": [
+          "Team"
+        ],
+        "summary": "Update Team Member",
+        "description": "Admin only. Deactivate a member to stop new assignments (their existing enquiries stay with them).",
+        "operationId": "update_team_member_api_team__member_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Member Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeamMemberUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TeamMemberOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/followups/summary": {
+      "get": {
+        "tags": [
+          "Follow-up reminders"
+        ],
+        "summary": "Followup Summary",
+        "description": "Counts for badges: pending, overdue, due today, done.",
+        "operationId": "followup_summary_api_followups_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_FollowUpSummary_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/followups": {
+      "get": {
+        "tags": [
+          "Follow-up reminders"
+        ],
+        "summary": "List Followups",
+        "description": "Reminders across all enquiries, most urgent first.",
+        "operationId": "list_followups_api_followups_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "Pending",
+                    "Done",
+                    "Dismissed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "Pending",
+              "title": "Status"
+            }
+          },
+          {
+            "name": "overdue",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Only pending follow-ups that are past their suggested date",
+              "default": false,
+              "title": "Overdue"
+            },
+            "description": "Only pending follow-ups that are past their suggested date"
+          },
+          {
+            "name": "assignee_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Assignee Id"
+            }
+          },
+          {
+            "name": "unassigned",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Unassigned"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paginated_FollowUpItem_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/followups/{followup_id}": {
+      "put": {
+        "tags": [
+          "Follow-up reminders"
+        ],
+        "summary": "Update Followup",
+        "description": "Mark a follow-up Done / Dismissed (or put it back to Pending). Returns the refreshed counts.",
+        "operationId": "update_followup_api_followups__followup_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "followup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Followup Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FollowUpUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_FollowUpSummary_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/system/capabilities": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Capabilities",
+        "description": "What this deployment can actually do, so the UI can disable buttons that would only fail (no secrets exposed).",
+        "operationId": "capabilities_api_system_capabilities_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_CapabilitiesOut_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AIUsageStats": {
+        "properties": {
+          "total_requests": {
+            "type": "integer",
+            "title": "Total Requests"
+          },
+          "successful_requests": {
+            "type": "integer",
+            "title": "Successful Requests"
+          },
+          "failed_requests": {
+            "type": "integer",
+            "title": "Failed Requests"
+          },
+          "retry_count": {
+            "type": "integer",
+            "title": "Retry Count"
+          },
+          "input_tokens": {
+            "type": "integer",
+            "title": "Input Tokens"
+          },
+          "output_tokens": {
+            "type": "integer",
+            "title": "Output Tokens"
+          },
+          "estimated_cost_usd": {
+            "type": "number",
+            "title": "Estimated Cost Usd"
+          },
+          "average_response_time": {
+            "type": "number",
+            "title": "Average Response Time"
+          },
+          "cost_note": {
+            "type": "string",
+            "title": "Cost Note"
+          },
+          "by_provider": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderUsage"
+            },
+            "type": "array",
+            "title": "By Provider"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_requests",
+          "successful_requests",
+          "failed_requests",
+          "retry_count",
+          "input_tokens",
+          "output_tokens",
+          "estimated_cost_usd",
+          "average_response_time",
+          "cost_note",
+          "by_provider"
+        ],
+        "title": "AIUsageStats"
+      },
+      "AdminOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "email",
+          "role",
+          "created_at"
+        ],
+        "title": "AdminOut"
+      },
+      "AnalysisOut": {
+        "properties": {
+          "service_category": {
+            "type": "string",
+            "title": "Service Category"
+          },
+          "customer_location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Location"
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "urgency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Urgency"
+          },
+          "project_timeline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Timeline"
+          },
+          "project_requirements": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Project Requirements"
+          },
+          "missing_information": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Information"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "customer_intent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Intent"
+          },
+          "sentiment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sentiment"
+          },
+          "detected_language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detected Language"
+          },
+          "confidence_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Score"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "service_category",
+          "customer_location",
+          "budget",
+          "currency",
+          "urgency",
+          "project_timeline",
+          "project_requirements",
+          "missing_information",
+          "summary",
+          "customer_intent",
+          "sentiment",
+          "detected_language",
+          "confidence_score",
+          "created_at"
+        ],
+        "title": "AnalysisOut"
+      },
+      "ApiResponse_AIUsageStats_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/AIUsageStats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[AIUsageStats]"
+      },
+      "ApiResponse_AdminOut_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[AdminOut]"
+      },
+      "ApiResponse_CapabilitiesOut_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/CapabilitiesOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[CapabilitiesOut]"
+      },
+      "ApiResponse_CommunicationOut_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/CommunicationOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[CommunicationOut]"
+      },
+      "ApiResponse_ConversionStats_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ConversionStats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[ConversionStats]"
+      },
+      "ApiResponse_DashboardStats_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/DashboardStats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[DashboardStats]"
+      },
+      "ApiResponse_EnquiryDetail_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/EnquiryDetail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[EnquiryDetail]"
+      },
+      "ApiResponse_EnquiryOut_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/EnquiryOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[EnquiryOut]"
+      },
+      "ApiResponse_FollowUpSummary_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/FollowUpSummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[FollowUpSummary]"
+      },
+      "ApiResponse_LeadDistribution_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/LeadDistribution"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[LeadDistribution]"
+      },
+      "ApiResponse_PerformanceStats_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PerformanceStats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[PerformanceStats]"
+      },
+      "ApiResponse_PipelineValue_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PipelineValue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[PipelineValue]"
+      },
+      "ApiResponse_ResponseOut_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResponseOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[ResponseOut]"
+      },
+      "ApiResponse_TeamMemberOut_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/TeamMemberOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[TeamMemberOut]"
+      },
+      "ApiResponse_TokenOut_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/TokenOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[TokenOut]"
+      },
+      "ApiResponse_WhatsAppOut_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/WhatsAppOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[WhatsAppOut]"
+      },
+      "ApiResponse_list_CountItem__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/CountItem"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[list[CountItem]]"
+      },
+      "ApiResponse_list_FunnelStage__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/FunnelStage"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[list[FunnelStage]]"
+      },
+      "ApiResponse_list_TeamMemberOut__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/TeamMemberOut"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[list[TeamMemberOut]]"
+      },
+      "ApiResponse_list_TrendPoint__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/TrendPoint"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[list[TrendPoint]]"
+      },
+      "ApiResponse_list_WorkflowLogOut__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WorkflowLogOut"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[list[WorkflowLogOut]]"
+      },
+      "AssigneeUpdate": {
+        "properties": {
+          "assignee_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Id"
+          }
+        },
+        "type": "object",
+        "title": "AssigneeUpdate"
+      },
+      "CapabilitiesOut": {
+        "properties": {
+          "email_enabled": {
+            "type": "boolean",
+            "title": "Email Enabled"
+          },
+          "whatsapp_enabled": {
+            "type": "boolean",
+            "title": "Whatsapp Enabled"
+          },
+          "default_country_code": {
+            "type": "string",
+            "title": "Default Country Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email_enabled",
+          "whatsapp_enabled",
+          "default_country_code"
+        ],
+        "title": "CapabilitiesOut"
+      },
+      "CommunicationOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "recipient": {
+            "type": "string",
+            "title": "Recipient"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "sent_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent By Name"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "channel",
+          "kind",
+          "recipient",
+          "subject",
+          "body",
+          "status",
+          "error",
+          "sent_by_name",
+          "created_at"
+        ],
+        "title": "CommunicationOut"
+      },
+      "ConversionStats": {
+        "properties": {
+          "total_enquiries": {
+            "type": "integer",
+            "title": "Total Enquiries"
+          },
+          "converted": {
+            "type": "integer",
+            "title": "Converted"
+          },
+          "closed": {
+            "type": "integer",
+            "title": "Closed"
+          },
+          "open": {
+            "type": "integer",
+            "title": "Open"
+          },
+          "conversion_rate": {
+            "type": "number",
+            "title": "Conversion Rate"
+          },
+          "by_temperature": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "By Temperature"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_enquiries",
+          "converted",
+          "closed",
+          "open",
+          "conversion_rate",
+          "by_temperature"
+        ],
+        "title": "ConversionStats"
+      },
+      "CountItem": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "percentage": {
+            "type": "number",
+            "title": "Percentage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "count",
+          "percentage"
+        ],
+        "title": "CountItem"
+      },
+      "DashboardStats": {
+        "properties": {
+          "total_enquiries": {
+            "type": "integer",
+            "title": "Total Enquiries"
+          },
+          "new_enquiries": {
+            "type": "integer",
+            "title": "New Enquiries"
+          },
+          "high_priority_enquiries": {
+            "type": "integer",
+            "title": "High Priority Enquiries"
+          },
+          "in_progress_enquiries": {
+            "type": "integer",
+            "title": "In Progress Enquiries"
+          },
+          "converted_enquiries": {
+            "type": "integer",
+            "title": "Converted Enquiries"
+          },
+          "closed_enquiries": {
+            "type": "integer",
+            "title": "Closed Enquiries"
+          },
+          "needs_manual_review": {
+            "type": "integer",
+            "title": "Needs Manual Review"
+          },
+          "ai_failed": {
+            "type": "integer",
+            "title": "Ai Failed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_enquiries",
+          "new_enquiries",
+          "high_priority_enquiries",
+          "in_progress_enquiries",
+          "converted_enquiries",
+          "closed_enquiries",
+          "needs_manual_review",
+          "ai_failed"
+        ],
+        "title": "DashboardStats"
+      },
+      "EnquiryCreate": {
+        "properties": {
+          "customer_name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Customer Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Message"
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Source",
+            "default": "web"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_name",
+          "message"
+        ],
+        "title": "EnquiryCreate"
+      },
+      "EnquiryDetail": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "customer_name": {
+            "type": "string",
+            "title": "Customer Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "ai_status": {
+            "type": "string",
+            "title": "Ai Status"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "priority_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Reason"
+          },
+          "needs_manual_review": {
+            "type": "boolean",
+            "title": "Needs Manual Review"
+          },
+          "duplicate_of_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Of Id"
+          },
+          "duplicate_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Reason"
+          },
+          "assigned_to_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To Id"
+          },
+          "assigned_to_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To Name"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "service_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Category"
+          },
+          "lead_score_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Score Total"
+          },
+          "lead_temperature": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Temperature"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "analysis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnalysisOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lead_score": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadScoreOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "response": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResponseOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "followups": {
+            "items": {
+              "$ref": "#/components/schemas/FollowUpOut"
+            },
+            "type": "array",
+            "title": "Followups"
+          },
+          "communications": {
+            "items": {
+              "$ref": "#/components/schemas/CommunicationOut"
+            },
+            "type": "array",
+            "title": "Communications"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "customer_name",
+          "phone",
+          "email",
+          "message",
+          "source",
+          "status",
+          "ai_status",
+          "priority",
+          "priority_reason",
+          "needs_manual_review",
+          "duplicate_of_id",
+          "duplicate_reason",
+          "assigned_to_id",
+          "assigned_to_name",
+          "summary",
+          "service_category",
+          "lead_score_total",
+          "lead_temperature",
+          "created_at",
+          "updated_at",
+          "analysis",
+          "lead_score",
+          "response",
+          "followups",
+          "communications"
+        ],
+        "title": "EnquiryDetail"
+      },
+      "EnquiryOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "customer_name": {
+            "type": "string",
+            "title": "Customer Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "ai_status": {
+            "type": "string",
+            "title": "Ai Status"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "priority_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Reason"
+          },
+          "needs_manual_review": {
+            "type": "boolean",
+            "title": "Needs Manual Review"
+          },
+          "duplicate_of_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Of Id"
+          },
+          "duplicate_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Reason"
+          },
+          "assigned_to_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To Id"
+          },
+          "assigned_to_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To Name"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "service_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Category"
+          },
+          "lead_score_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Score Total"
+          },
+          "lead_temperature": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Temperature"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "customer_name",
+          "phone",
+          "email",
+          "message",
+          "source",
+          "status",
+          "ai_status",
+          "priority",
+          "priority_reason",
+          "needs_manual_review",
+          "duplicate_of_id",
+          "duplicate_reason",
+          "assigned_to_id",
+          "assigned_to_name",
+          "summary",
+          "service_category",
+          "lead_score_total",
+          "lead_temperature",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "EnquiryOut",
+        "description": "List-item shape: enquiry + the headline AI results the dashboard table needs."
+      },
+      "EnquiryStatusUpdate": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "New",
+              "In Progress",
+              "Converted",
+              "Closed"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "EnquiryStatusUpdate"
+      },
+      "FollowUpItem": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "enquiry_id": {
+            "type": "integer",
+            "title": "Enquiry Id"
+          },
+          "customer_name": {
+            "type": "string",
+            "title": "Customer Name"
+          },
+          "enquiry_priority": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enquiry Priority"
+          },
+          "lead_temperature": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Temperature"
+          },
+          "assigned_to_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To Name"
+          },
+          "suggested_action": {
+            "type": "string",
+            "title": "Suggested Action"
+          },
+          "suggested_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Date"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "is_overdue": {
+            "type": "boolean",
+            "title": "Is Overdue"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "enquiry_id",
+          "customer_name",
+          "enquiry_priority",
+          "lead_temperature",
+          "assigned_to_name",
+          "suggested_action",
+          "suggested_date",
+          "status",
+          "is_overdue",
+          "created_at"
+        ],
+        "title": "FollowUpItem"
+      },
+      "FollowUpOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "suggested_action": {
+            "type": "string",
+            "title": "Suggested Action"
+          },
+          "suggested_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Date"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "suggested_action",
+          "suggested_date",
+          "status",
+          "created_at"
+        ],
+        "title": "FollowUpOut"
+      },
+      "FollowUpSummary": {
+        "properties": {
+          "pending": {
+            "type": "integer",
+            "title": "Pending"
+          },
+          "overdue": {
+            "type": "integer",
+            "title": "Overdue"
+          },
+          "due_today": {
+            "type": "integer",
+            "title": "Due Today"
+          },
+          "done": {
+            "type": "integer",
+            "title": "Done"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pending",
+          "overdue",
+          "due_today",
+          "done"
+        ],
+        "title": "FollowUpSummary"
+      },
+      "FollowUpUpdate": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "Pending",
+              "Done",
+              "Dismissed"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "FollowUpUpdate"
+      },
+      "FunnelStage": {
+        "properties": {
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "percentage_of_total": {
+            "type": "number",
+            "title": "Percentage Of Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage",
+          "count",
+          "percentage_of_total"
+        ],
+        "title": "FunnelStage"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LeadDistribution": {
+        "properties": {
+          "hot": {
+            "type": "integer",
+            "title": "Hot"
+          },
+          "warm": {
+            "type": "integer",
+            "title": "Warm"
+          },
+          "cold": {
+            "type": "integer",
+            "title": "Cold"
+          },
+          "unscored": {
+            "type": "integer",
+            "title": "Unscored"
+          },
+          "average_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Score"
+          },
+          "score_buckets": {
+            "items": {
+              "$ref": "#/components/schemas/CountItem"
+            },
+            "type": "array",
+            "title": "Score Buckets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hot",
+          "warm",
+          "cold",
+          "unscored",
+          "average_score",
+          "score_buckets"
+        ],
+        "title": "LeadDistribution"
+      },
+      "LeadScoreOut": {
+        "properties": {
+          "total_score": {
+            "type": "integer",
+            "title": "Total Score"
+          },
+          "budget_score": {
+            "type": "integer",
+            "title": "Budget Score"
+          },
+          "requirement_clarity_score": {
+            "type": "integer",
+            "title": "Requirement Clarity Score"
+          },
+          "urgency_score": {
+            "type": "integer",
+            "title": "Urgency Score"
+          },
+          "service_relevance_score": {
+            "type": "integer",
+            "title": "Service Relevance Score"
+          },
+          "engagement_score": {
+            "type": "integer",
+            "title": "Engagement Score"
+          },
+          "lead_temperature": {
+            "type": "string",
+            "title": "Lead Temperature"
+          },
+          "scoring_explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scoring Explanation"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_score",
+          "budget_score",
+          "requirement_clarity_score",
+          "urgency_score",
+          "service_relevance_score",
+          "engagement_score",
+          "lead_temperature",
+          "scoring_explanation",
+          "created_at"
+        ],
+        "title": "LeadScoreOut"
+      },
+      "LoginRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "PageMeta": {
+        "properties": {
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "total_pages": {
+            "type": "integer",
+            "title": "Total Pages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageMeta"
+      },
+      "Paginated_EnquiryOut_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/EnquiryOut"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Paginated[EnquiryOut]"
+      },
+      "Paginated_FollowUpItem_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/FollowUpItem"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Paginated[FollowUpItem]"
+      },
+      "Paginated_WorkflowLogOut_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WorkflowLogOut"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Paginated[WorkflowLogOut]"
+      },
+      "PerformanceStats": {
+        "properties": {
+          "ai_success_rate": {
+            "type": "number",
+            "title": "Ai Success Rate"
+          },
+          "average_latency_seconds": {
+            "type": "number",
+            "title": "Average Latency Seconds"
+          },
+          "p95_latency_seconds": {
+            "type": "number",
+            "title": "P95 Latency Seconds"
+          },
+          "workflows_completed": {
+            "type": "integer",
+            "title": "Workflows Completed"
+          },
+          "workflows_failed": {
+            "type": "integer",
+            "title": "Workflows Failed"
+          },
+          "workflow_success_rate": {
+            "type": "number",
+            "title": "Workflow Success Rate"
+          },
+          "average_workflow_seconds": {
+            "type": "number",
+            "title": "Average Workflow Seconds"
+          },
+          "latency_by_provider": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Latency By Provider"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ai_success_rate",
+          "average_latency_seconds",
+          "p95_latency_seconds",
+          "workflows_completed",
+          "workflows_failed",
+          "workflow_success_rate",
+          "average_workflow_seconds",
+          "latency_by_provider"
+        ],
+        "title": "PerformanceStats"
+      },
+      "PipelineCurrency": {
+        "properties": {
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "enquiries": {
+            "type": "integer",
+            "title": "Enquiries"
+          },
+          "estimated_pipeline_value": {
+            "type": "number",
+            "title": "Estimated Pipeline Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "currency",
+          "enquiries",
+          "estimated_pipeline_value"
+        ],
+        "title": "PipelineCurrency"
+      },
+      "PipelineValue": {
+        "properties": {
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "by_currency": {
+            "items": {
+              "$ref": "#/components/schemas/PipelineCurrency"
+            },
+            "type": "array",
+            "title": "By Currency"
+          },
+          "open_enquiries_without_budget": {
+            "type": "integer",
+            "title": "Open Enquiries Without Budget"
+          }
+        },
+        "type": "object",
+        "required": [
+          "note",
+          "by_currency",
+          "open_enquiries_without_budget"
+        ],
+        "title": "PipelineValue"
+      },
+      "ProviderUsage": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "model_name": {
+            "type": "string",
+            "title": "Model Name"
+          },
+          "requests": {
+            "type": "integer",
+            "title": "Requests"
+          },
+          "successful": {
+            "type": "integer",
+            "title": "Successful"
+          },
+          "failed": {
+            "type": "integer",
+            "title": "Failed"
+          },
+          "input_tokens": {
+            "type": "integer",
+            "title": "Input Tokens"
+          },
+          "output_tokens": {
+            "type": "integer",
+            "title": "Output Tokens"
+          },
+          "estimated_cost_usd": {
+            "type": "number",
+            "title": "Estimated Cost Usd"
+          },
+          "average_response_time": {
+            "type": "number",
+            "title": "Average Response Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "model_name",
+          "requests",
+          "successful",
+          "failed",
+          "input_tokens",
+          "output_tokens",
+          "estimated_cost_usd",
+          "average_response_time"
+        ],
+        "title": "ProviderUsage"
+      },
+      "ResponseOut": {
+        "properties": {
+          "generated_response": {
+            "type": "string",
+            "title": "Generated Response"
+          },
+          "edited_response": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edited Response"
+          },
+          "final_response": {
+            "type": "string",
+            "title": "Final Response"
+          },
+          "followup_questions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Followup Questions"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "generated_response",
+          "edited_response",
+          "final_response",
+          "followup_questions",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ResponseOut"
+      },
+      "ResponseUpdate": {
+        "properties": {
+          "edited_response": {
+            "type": "string",
+            "maxLength": 3000,
+            "minLength": 1,
+            "title": "Edited Response"
+          }
+        },
+        "type": "object",
+        "required": [
+          "edited_response"
+        ],
+        "title": "ResponseUpdate"
+      },
+      "SendEmailRequest": {
+        "properties": {
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "body": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 3000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          }
+        },
+        "type": "object",
+        "title": "SendEmailRequest",
+        "description": "Both optional: by default the enquiry's current reply (edited version if any) is sent."
+      },
+      "TeamMemberCreate": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Username"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 8,
+            "title": "Password"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "agent"
+            ],
+            "title": "Role",
+            "default": "agent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "email",
+          "password"
+        ],
+        "title": "TeamMemberCreate"
+      },
+      "TeamMemberOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "open_enquiries": {
+            "type": "integer",
+            "title": "Open Enquiries"
+          },
+          "total_assigned": {
+            "type": "integer",
+            "title": "Total Assigned"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "email",
+          "role",
+          "is_active",
+          "open_enquiries",
+          "total_assigned",
+          "created_at"
+        ],
+        "title": "TeamMemberOut"
+      },
+      "TeamMemberUpdate": {
+        "properties": {
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "admin",
+                  "agent"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          }
+        },
+        "type": "object",
+        "title": "TeamMemberUpdate"
+      },
+      "TokenOut": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_in"
+        ],
+        "title": "TokenOut"
+      },
+      "TrendPoint": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "count"
+        ],
+        "title": "TrendPoint"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WhatsAppOut": {
+        "properties": {
+          "link": {
+            "type": "string",
+            "title": "Link"
+          },
+          "communication": {
+            "$ref": "#/components/schemas/CommunicationOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "link",
+          "communication"
+        ],
+        "title": "WhatsAppOut"
+      },
+      "WhatsAppRequest": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 3000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "title": "WhatsAppRequest"
+      },
+      "WorkflowLogOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "enquiry_id": {
+            "type": "integer",
+            "title": "Enquiry Id"
+          },
+          "workflow_step": {
+            "type": "string",
+            "title": "Workflow Step"
+          },
+          "execution_status": {
+            "type": "string",
+            "enum": [
+              "started",
+              "success",
+              "failed",
+              "skipped"
+            ],
+            "title": "Execution Status"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "execution_time": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "enquiry_id",
+          "workflow_step",
+          "execution_status",
+          "message",
+          "execution_time",
+          "created_at"
+        ],
+        "title": "WorkflowLogOut"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "description": "Paste the access_token returned by POST /api/auth/login",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
