@@ -6,7 +6,9 @@ os.environ.setdefault("JWT_SECRET", "test-secret-test-secret-test-secret-0123456
 os.environ["DATABASE_URL"] = "sqlite://"  # never touch the real leadflow.db from tests
 # Environment variables beat .env, so developer settings (real keys, throttling) can't leak into tests.
 os.environ["PASSWORD_HASH_ITERATIONS"] = "2000"  # fast hashing for tests that create users
-os.environ["SMTP_HOST"] = ""  # email is OFF unless a test turns it on
+# Email is OFF unless a test turns it on, and a developer's REAL credentials (backend/.env) must never reach a test.
+for _name in ("SMTP_HOST", "SMTP_USERNAME", "SMTP_PASSWORD", "SMTP_FROM", "NOTIFY_EMAIL"):
+    os.environ[_name] = ""
 os.environ["AI_MIN_INTERVAL_SECONDS"] = "0"
 os.environ["AI_MAX_CONCURRENCY"] = "2"
 os.environ["GEMINI_API_KEY"] = ""

@@ -1,12 +1,7 @@
-# Render Blueprint: one click creates the web service (API + React app in one) and a free PostgreSQL database.
+# Render Blueprint: one click creates the web service (API + React app in one). The database is NOT created here (a Render
+# account may only have ONE free database); you give the app a connection string below.
 # Render dashboard -> New -> Blueprint -> pick this repository. Secrets are NOT stored here: Render asks you for every
 # value marked `sync: false` and keeps them in its dashboard (never in git).
-databases:
-  - name: leadflow-db
-    plan: free
-    databaseName: leadflow
-    user: leadflow
-
 services:
   - type: web
     name: leadflow-ai
@@ -14,10 +9,13 @@ services:
     plan: free
     healthCheckPath: /health
     envVars:
+      # Your PostgreSQL connection string (e.g. the "Internal Database URL" of the free database you already have on
+      # Render, or a free one from Neon). For a quick throw-away demo you may type:  sqlite:///./leadflow.db
       - key: DATABASE_URL
-        fromDatabase:
-          name: leadflow-db
-          property: connectionString
+        sync: false
+      # keeps all LeadFlow tables in their own schema, so sharing an existing database cannot touch other tables
+      - key: DATABASE_SCHEMA
+        value: leadflow
       - key: ENVIRONMENT
         value: production          # refuses to start with a weak JWT secret
       - key: JWT_SECRET

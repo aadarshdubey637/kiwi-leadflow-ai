@@ -70,7 +70,7 @@ backend\.venv\Scripts\python scripts\seed_demo_data.py --statuses
 **Run the tests** (no API key or network needed — the LLM is mocked, email goes to a local test SMTP server):
 
 ```bash
-cd backend && python -m pytest -q        # 189 tests
+cd backend && python -m pytest -q        # 200 tests
 cd frontend && npm run build             # type-check + production build
 ```
 
@@ -120,7 +120,7 @@ The full list, with comments, is in [`backend/.env.example`](backend/.env.exampl
 
 ## Deploy (Render, free)
 
-`render.yaml` + `Dockerfile` deploy the whole product as one service with a free PostgreSQL database; step-by-step guide and free-tier caveats in [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md). This exact setup was tested (real image, real PostgreSQL, real AI, browser end-to-end).
+`render.yaml` + `Dockerfile` deploy the whole product as one service that uses your PostgreSQL connection string (it can safely share an existing database); step-by-step guide and free-tier caveats in [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md). This exact setup was tested (real image, real PostgreSQL, real AI, browser end-to-end).
 
 ## How it works (short version)
 

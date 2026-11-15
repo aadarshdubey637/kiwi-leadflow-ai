@@ -86,3 +86,26 @@ def test_without_a_build_the_app_has_no_catch_all(monkeypatch):
     assert plain.get("/").status_code == 404  # local development: Vite serves the frontend, not the API
     monkeypatch.delenv("STATIC_DIR")
     importlib.reload(main)
+
+
+# ---------- sharing a PostgreSQL database safely: LeadFlow keeps its tables in its own schema ----------
+@pytest.mark.parametrize("name", ["leadflow", "_lf", "Lead_Flow_2"])
+def test_database_schema_accepts_plain_identifiers(name):
+    assert Settings(database_schema=name).database_schema == name
+
+
+@pytest.mark.parametrize("name", ["x; DROP TABLE y", 'a"b', "1abc", "has space", "a" * 64, "public.x"])
+def test_database_schema_rejects_anything_that_is_not_a_plain_identifier(name):
+    with pytest.raises(Exception):
+        Settings(database_schema=name)  # the value is placed into SQL, so it must never contain anything but an identifier
+
+
+def test_empty_database_schema_means_none():
+    assert Settings(database_schema="").database_schema is None
+
+
+def test_a_developers_real_email_credentials_never_reach_the_test_environment():
+    from app.core.config import get_settings
+
+    s = get_settings()
+    assert not s.smtp_password and not s.smtp_username and not s.smtp_host and not s.email_enabled  # blanked by conftest

@@ -31,7 +31,7 @@
 |---|---|
 | **AI integration and implementation (25)** | Two providers behind one interface with automatic fallback; strict JSON schema + Pydantic; retries with corrective hint; grounding against hallucinated budgets/locations; prompt-injection handling; Hindi/Hinglish tested live; rate-limit-aware scheduler; token/latency/cost tracking |
 | **Workflow automation logic (20)** | 16 logged steps, single-transaction save, idempotent retries, atomic job claim, restart recovery, auto-assignment, duplicate detection, follow-ups, email alerts. Visualised as a timeline |
-| **Backend and API development (15)** | FastAPI, layered (routes → services → models), 31 documented endpoints (`openapi.json`), JWT auth + roles, rate limiting, consistent error format, 189 automated tests |
+| **Backend and API development (15)** | FastAPI, layered (routes → services → models), 31 documented endpoints (`openapi.json`), JWT auth + roles, rate limiting, consistent error format, 200 automated tests |
 | **Problem-solving ability (15)** | Real problems found and fixed during live testing: hallucinated values, prompt injection steering priority, free-tier 429s (diagnosed from the provider's message → scheduler), model retired by the provider, Python-version syntax incompatibility (tested on 3.11 / 3.12 / 3.14) |
 | **UI/UX and dashboard (10)** | Customer site + admin console, glass-style responsive design, loading / empty / error states, charts from real data, mobile layout |
 | **Code quality (5)** | Small single-purpose services, typed Python and TypeScript, docstrings explaining *why*, lint and type-check clean, no secrets in code |

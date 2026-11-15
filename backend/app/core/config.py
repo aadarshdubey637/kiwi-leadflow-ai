@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from functools import lru_cache
 
 from pydantic import field_validator, model_validator
@@ -17,6 +18,9 @@ class Settings(BaseSettings):
     environment: str = "development"  # set to "production" to enforce a real JWT secret
     company_name: str = "Kiwi Connect Digital"
     database_url: str = "sqlite:///./leadflow.db"
+    # PostgreSQL only: keep every LeadFlow table inside this schema (created automatically). Lets the app share an
+    # existing database (e.g. your one free Render database) without touching any other project's tables.
+    database_schema: str | None = None
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
     # --- Auth ---
@@ -83,6 +87,15 @@ class Settings(BaseSettings):
         for prefix in ("postgres://", "postgresql://"):
             if v.startswith(prefix):
                 return "postgresql+psycopg://" + v[len(prefix):]
+        return v
+
+    @field_validator("database_schema", mode="after")
+    @classmethod
+    def _schema_is_a_safe_identifier(cls, v):
+        if v in (None, ""):
+            return None
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,62}", v):
+            raise ValueError("DATABASE_SCHEMA must be a plain identifier (letters, digits, underscore)")
         return v
 
     @model_validator(mode="after")

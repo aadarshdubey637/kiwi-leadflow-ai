@@ -8,9 +8,17 @@ from app.core.config import get_settings
 settings = get_settings()
 
 _is_sqlite = settings.database_url.startswith("sqlite")
+if _is_sqlite:
+    _connect_args: dict = {"check_same_thread": False}
+elif settings.database_schema:
+    # Every connection looks in (and creates tables in) the LeadFlow schema first, never the shared `public` one.
+    _connect_args = {"options": f"-csearch_path={settings.database_schema}"}
+else:
+    _connect_args = {}
+
 engine = create_engine(
     settings.database_url,
-    connect_args={"check_same_thread": False} if _is_sqlite else {},
+    connect_args=_connect_args,
     # Hosted databases drop idle connections (e.g. a free instance waking from sleep): test before use, recycle often.
     **({} if _is_sqlite else {"pool_pre_ping": True, "pool_recycle": 300}),
 )
@@ -68,5 +76,10 @@ def init_db() -> None:
     from app import models  # noqa: F401  (registers tables on Base.metadata)
     from app.database.base import Base
 
+    if settings.database_schema and engine.dialect.name == "postgresql":
+        from sqlalchemy import text
+
+        with engine.begin() as conn:  # identifier was validated in config, so interpolating it is safe
+            conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{settings.database_schema}"'))
     Base.metadata.create_all(bind=engine)
     ensure_schema()
