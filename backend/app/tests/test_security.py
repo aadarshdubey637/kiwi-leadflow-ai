@@ -160,10 +160,10 @@ def test_changing_admin_password_in_env_updates_an_existing_admin(db_session, mo
     assert auth_service.seed_admin_from_env(db_session) is True  # created
     assert auth_service.seed_admin_from_env(db_session) is False  # nothing changed: no needless rehash
 
-    _admin_env(monkeypatch, "Admin@123-new")  # e.g. edited in Render's dashboard, then redeployed
+    _admin_env(monkeypatch, "rotated-password-9Qx")  # e.g. edited in Render's dashboard, then redeployed
     assert auth_service.seed_admin_from_env(db_session) is True
     admin = db_session.scalar(select(AdminUser).where(AdminUser.username == "boss"))
-    assert verify_password("Admin@123-new", admin.password_hash) and not verify_password("first-password-1", admin.password_hash)
+    assert verify_password("rotated-password-9Qx", admin.password_hash) and not verify_password("first-password-1", admin.password_hash)
     assert auth_service.seed_admin_from_env(db_session) is False  # stable again
 
 
