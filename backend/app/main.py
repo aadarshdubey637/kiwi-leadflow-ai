@@ -57,7 +57,8 @@ for module in (
 
 @app.get("/health", tags=["System"])
 def health():
-    return {"success": True, "data": {"status": "ok"}}
+    commit = (os.environ.get("RENDER_GIT_COMMIT") or "")[:7] or None  # which version is live (None when run locally)
+    return {"success": True, "data": {"status": "ok", "commit": commit}}
 
 
 # ---------------------------------------------------------------------------------------------------------------

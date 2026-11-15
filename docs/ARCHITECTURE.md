@@ -138,7 +138,7 @@ Every box above writes a row to `workflow_logs` (status, duration, error text). 
 
 ## 6. Testing strategy
 
-- **Unit and API tests (203, pytest):** extraction correctness, invalid JSON, provider failure/timeout/rate-limit, unsupported categories, retries, fallback only when needed, rate-limit scheduling, grounding, scoring, priority, duplicates, full workflow and history, retry without duplicates, auth and JWT attacks, route protection, dashboard maths, exports, email over a real local SMTP server, WhatsApp links, assignment rules, schema migration.
+- **Unit and API tests (206, pytest):** extraction correctness, invalid JSON, provider failure/timeout/rate-limit, unsupported categories, retries, fallback only when needed, rate-limit scheduling, grounding, scoring, priority, duplicates, full workflow and history, retry without duplicates, auth and JWT attacks, route protection, dashboard maths, exports, email over a real local SMTP server, WhatsApp links, assignment rules, schema migration.
 - **No paid or external dependency in tests:** the LLM is replaced by a scripted fake that implements the same interface.
 - **Browser tests** (headless Chrome/Edge, run during development, not in the repo): login and protection, every page, forms, filters, exports, team and reminders, customer panel, mobile layout.
 - **Live checks:** the real Groq and Gemini APIs were exercised with the assignment example, Hindi, Hinglish, vague, prompt-injection and duplicate enquiries.

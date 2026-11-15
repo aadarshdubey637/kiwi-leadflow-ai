@@ -70,7 +70,7 @@ backend\.venv\Scripts\python scripts\seed_demo_data.py --statuses
 **Run the tests** (no API key or network needed — the LLM is mocked, email goes to a local test SMTP server):
 
 ```bash
-cd backend && python -m pytest -q        # 203 tests
+cd backend && python -m pytest -q        # 206 tests
 cd frontend && npm run build             # type-check + production build
 ```
 

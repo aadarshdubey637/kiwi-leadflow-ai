@@ -184,3 +184,34 @@ def test_login_works_with_the_new_password_after_sync(anon_client, db_session, m
     auth_service.seed_admin_from_env(db_session)
     assert anon_client.post("/api/auth/login", json={"username": "boss", "password": "new-password-2"}).status_code == 200
     assert anon_client.post("/api/auth/login", json={"username": "boss", "password": "old-password-1"}).status_code == 401
+
+
+def test_admin_is_created_even_when_admin_email_is_left_blank(db_session, monkeypatch):
+    """Found on a live deployment: a blank ADMIN_EMAIL used to mean no admin account was created at all."""
+    cfg = get_settings()
+    monkeypatch.setattr(cfg, "admin_username", "boss")
+    monkeypatch.setattr(cfg, "admin_email", "")
+    monkeypatch.setattr(cfg, "admin_password", "a-strong-password-1")
+    assert auth_service.seed_admin_from_env(db_session) is True
+    boss = db_session.scalar(select(AdminUser).where(AdminUser.username == "boss"))
+    assert boss and boss.email == "boss@leadflow.local" and verify_password("a-strong-password-1", boss.password_hash)
+
+
+def test_bootstrap_logs_explain_what_happened_without_leaking_the_password(db_session, monkeypatch, caplog):
+    import logging
+
+    cfg = get_settings()
+    monkeypatch.setattr(cfg, "admin_username", "boss")
+    monkeypatch.setattr(cfg, "admin_email", "boss@example.com")
+    monkeypatch.setattr(cfg, "admin_password", '"quoted-secret-1"')
+    with caplog.at_level(logging.INFO, logger="leadflow.auth"):
+        auth_service.seed_admin_from_env(db_session)
+    text = caplog.text
+    assert "created admin 'boss'" in text and "wrapped in quotes" in text  # the classic dashboard mistake is called out
+    assert "quoted-secret-1" not in text  # never the password itself
+
+    caplog.clear()
+    monkeypatch.setattr(cfg, "admin_password", "")
+    with caplog.at_level(logging.INFO, logger="leadflow.auth"):
+        assert auth_service.seed_admin_from_env(db_session) is False
+    assert "ADMIN_PASSWORD not set" in caplog.text

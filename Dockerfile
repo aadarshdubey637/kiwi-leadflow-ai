@@ -24,4 +24,5 @@ RUN useradd --create-home --uid 10001 app && chown -R app /app
 USER app
 EXPOSE 10000
 # Render injects $PORT; default 10000 matches Render's convention
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
+# --proxy-headers: behind Render's load balancer, take the real client IP from X-Forwarded-For (needed for per-IP rate limits)
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000} --proxy-headers --forwarded-allow-ips='*'"]

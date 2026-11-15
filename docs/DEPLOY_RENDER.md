@@ -13,7 +13,7 @@ Tested before writing this guide: the real `Dockerfile` was built and run in pro
    | Variable | Value |
    |---|---|
    | `DATABASE_URL` | your PostgreSQL connection string: in Render open your existing database → **Connections** → copy the **Internal Database URL** (use the *External* one only if the database is in another region). A free database from Neon works too. For a quick throw-away demo you can type `sqlite:///./leadflow.db` instead (data is lost whenever the free service restarts) |
-   | `ADMIN_EMAIL` | any address for the first admin account |
+   | `ADMIN_EMAIL` | optional: an address for the admin account (a placeholder is used if blank) |
    | `ADMIN_PASSWORD` | a strong password: this is how you log in at `/admin/login` |
    | `GROQ_API_KEY` | your Groq key (free) |
    | `GEMINI_API_KEY` | your Gemini key (free), the automatic fallback |
@@ -33,6 +33,13 @@ Tested before writing this guide: the real `Dockerfile` was built and run in pro
 Every `git push` to the connected branch redeploys automatically.
 
 **Changing the admin password:** `ADMIN_PASSWORD` in Render is the source of truth. Edit it under the service's **Environment** tab, save (Render redeploys), and the admin's password is updated on the next start. Use a strong password: the site is public.
+
+## Can't sign in to `/admin/login`?
+
+1. **Is the latest version live?** Open `https://<your-service>.onrender.com/health`. It shows `"commit": "abc1234"`: compare it with the newest commit on GitHub. If it differs, the new build is still running or failed (see the **Events** tab).
+2. **`ADMIN_PASSWORD` is the password.** Check it under **Environment**: no quotes around it (they would become part of the password), no leading/trailing spaces. After editing, Render redeploys; the admin's password is re-synced from it on every start. The username is `ADMIN_USERNAME` (preset to `admin`).
+3. **Read the logs** (service → **Logs**). At every start LeadFlow prints one line beginning `admin bootstrap:`: *created admin*, *password updated*, *already matches*, or a warning (e.g. *ADMIN_PASSWORD not set*, *wrapped in quotes*). The password itself is never logged.
+4. Too many wrong attempts give *"Too many requests"* for a minute (10 per minute per visitor): wait and retry.
 
 ## Sharing an existing database safely
 

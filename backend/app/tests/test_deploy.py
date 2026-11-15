@@ -65,7 +65,8 @@ def test_assets_and_root_files_are_served(spa_client):
 
 
 def test_api_health_and_docs_are_not_shadowed_by_the_fallback(spa_client):
-    assert spa_client.get("/health").json() == {"success": True, "data": {"status": "ok"}}
+    health = spa_client.get("/health").json()
+    assert health["success"] is True and health["data"]["status"] == "ok"
     r = spa_client.get("/api/does-not-exist")
     assert r.status_code == 404 and r.json()["success"] is False  # unknown API paths stay JSON 404s, never index.html
     assert spa_client.get("/openapi.json").status_code == 200
@@ -109,3 +110,9 @@ def test_a_developers_real_email_credentials_never_reach_the_test_environment():
 
     s = get_settings()
     assert not s.smtp_password and not s.smtp_username and not s.smtp_host and not s.email_enabled  # blanked by conftest
+
+
+def test_health_reports_the_deployed_commit_when_known(client, monkeypatch):
+    assert client.get("/health").json()["data"]["commit"] is None  # local run: nothing to report
+    monkeypatch.setenv("RENDER_GIT_COMMIT", "e9f4f83a1b2c3d4e5f60718293a4b5c6d7e8f901")
+    assert client.get("/health").json()["data"] == {"status": "ok", "commit": "e9f4f83"}
