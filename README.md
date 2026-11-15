@@ -22,6 +22,16 @@ A customer sends an enquiry. LeadFlow reads it with an LLM, extracts what matter
 
 Two panels in one app: a **public customer site** (`/`) and a **JWT-protected admin console** (`/admin`).
 
+## Live demo
+
+| | |
+|---|---|
+| **Live site** | https://leadflow-ai-iuv5.onrender.com (customer site) · [`/admin/login`](https://leadflow-ai-iuv5.onrender.com/admin/login) (admin console) · [`/docs`](https://leadflow-ai-iuv5.onrender.com/docs) (API) |
+| **Demo video** | [`demo/leadflow-walkthrough.webm`](demo/leadflow-walkthrough.webm): 2 min 42 s screen recording with captions (download or open the raw file to play) |
+| **Admin login** | username `admin`; the password is provided with the submission, not stored in the repository |
+
+Hosted on Render's free plan, so the first request after a quiet period can take about a minute while it wakes up. Details: [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md).
+
 | Customer site | Admin dashboard |
 |---|---|
 | ![Customer site](docs/screenshots/01-customer-site.png) | ![Admin overview](docs/screenshots/03-admin-overview.png) |
@@ -155,6 +165,8 @@ backend/        FastAPI app (routes → services → models), tests, sample data
   app/services/providers/   Groq + Gemini adapters behind one interface
 frontend/       React admin console + public customer site
 scripts/        seed_demo_data.py, start-dev.ps1, export_docs.py
+demo/           leadflow-walkthrough.webm (captioned screen recording)
+Dockerfile, render.yaml   one-image deployment to Render
 docs/           architecture, database (ERD + SQL), AI model, deployment guide, OpenAPI spec
 ```
 
@@ -167,7 +179,7 @@ docs/           architecture, database (ERD + SQL), AI model, deployment guide, 
 | [`docs/AI_MODEL.md`](docs/AI_MODEL.md) | Which models, prompt design, validation, scoring rules, cost and limits |
 | [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md) | Deploying to Render, with the free-tier caveats |
 | [`docs/openapi.json`](docs/openapi.json) · `/docs` | The REST API contract (also live in Swagger UI) |
-| [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) | Every submission requirement and where it is satisfied |
+| [`docs/ASSIGNMENT_COVERAGE.md`](docs/ASSIGNMENT_COVERAGE.md) | Every assignment requirement and grading criterion, with where it is satisfied |
 | [`backend/README.md`](backend/README.md) · [`frontend/README.md`](frontend/README.md) | Component-level details and the API reference |
 
 ## Third-party libraries
