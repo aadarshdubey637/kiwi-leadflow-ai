@@ -1,26 +1,38 @@
+<div align="center">
+
 # LeadFlow AI
 
-**An AI-powered workflow automation system for customer enquiries** — built for the Kiwi Connect Digital assignment.
+**AI-powered workflow automation for customer enquiries**
+*Built for the Kiwi Connect Digital assignment*
 
-A customer sends an enquiry. LeadFlow reads it with an LLM, extracts what matters (service, budget, location, urgency, requirements, what's missing), categorises and prioritises it, scores the lead, flags duplicates, assigns it to a team member, drafts a professional reply with follow-up questions, and stores everything. An admin console shows it all, and the admin reviews, edits and sends the reply.
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React_19-20232A?logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL%20%7C%20SQLite-336791?logo=postgresql&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-211%20passing-brightgreen)
+![Bonus features](https://img.shields.io/badge/bonus%20features-10%2F10-blue)
 
-> **The assignment's own example**, run through the live system:
-> *"I own a clothing store in Indore. I need an e-commerce website where customers can browse products, place orders and make online payments. My budget is around ₹50,000."*
->
-> | Extracted | Value |
-> |---|---|
-> | Category | **E-commerce Development** |
-> | Budget | **₹50,000 (INR)** |
-> | Location | **Indore** |
-> | Requirements | e-commerce website with product browsing, order placement and online payments |
-> | Missing information | Project timeline · Design preferences · Number of products |
-> | Urgency / Priority | Not stated → **Medium** ("requirements are well defined and a budget was given") |
-> | Lead | **Warm**, 56/100, with a written score breakdown |
-> | Reply | Professional draft that acknowledges the need and asks the follow-up questions for the missing information |
->
-> *(An LLM's wording varies slightly from run to run; the values above are from a real run of the final system. The structure and the key facts — category, ₹50,000, Indore — are stable.)*
+[**Live demo**](https://leadflow-ai-iuv5.onrender.com) · [Demo video](demo/leadflow-walkthrough.webm) · [Quick start](#quick-start) · [Architecture](docs/ARCHITECTURE.md) · [AI model](docs/AI_MODEL.md) · [Assignment coverage](docs/ASSIGNMENT_COVERAGE.md)
 
-Two panels in one app: a **public customer site** (`/`) and a **JWT-protected admin console** (`/admin`).
+</div>
+
+---
+
+A customer sends an enquiry. LeadFlow reads it with an LLM and extracts what matters, then categorises and prioritises it, scores the lead, flags duplicates, assigns an owner and drafts a professional reply, all in one automated workflow. An admin console shows the result and the admin reviews, edits and sends the reply.
+
+## Contents
+
+[Live demo](#live-demo) · [Highlights](#highlights) · [Quick start](#quick-start) · [Assignment coverage](#assignment-coverage) · [Deploy](#deploy-render-free) · [How it works](#how-it-works) · [Tech stack](#tech-stack) · [API](#api-at-a-glance) · [Project structure](#project-structure) · [Docs](#documentation) · [Security](#security) · [Limitations](#known-limitations-honest-list) · [Troubleshooting](#troubleshooting)
+
+## Highlights
+
+- **Grounded AI extraction:** strict JSON schema, Pydantic validation, and checks that discard a budget or location the message does not support.
+- **Explainable decisions:** the LLM only extracts facts. Priority, lead score and follow-ups come from transparent rules, each with a written reason, so a customer cannot talk the system into a "Hot lead".
+- **Never loses an enquiry:** the original is saved first, the workflow is idempotent, and interrupted jobs are recovered on restart.
+- **Two AI providers:** Groq primary, Gemini fallback, with a rate-limit-aware scheduler that suits free tiers.
+- **Handles real input:** Hindi and Hinglish messages, duplicate customers, and prompt-injection attempts.
+- **Full product, not just an API:** customer site, admin console, email alerts, exports, analytics. All 10 bonus features are implemented.
 
 ## Live demo
 
@@ -39,6 +51,24 @@ Hosted on Render's free plan, so the first request after a quiet period can take
 ![Enquiry detail: original message, AI analysis, lead score, priority reason and editable reply](docs/screenshots/05-enquiry-detail.png)
 
 <sub>More screenshots in [`docs/screenshots/`](docs/screenshots/): enquiries list, workflow timeline, follow-ups, team, analytics, AI monitoring. All data shown is fictional sample data.</sub>
+
+### The assignment's own example, run through the system
+
+> **Input:**  
+> *"I own a clothing store in Indore. I need an e-commerce website where customers can browse products, place orders and make online payments. My budget is around ₹50,000."*
+>
+> | Extracted | Value |
+> |---|---|
+> | Category | **E-commerce Development** |
+> | Budget | **₹50,000 (INR)** |
+> | Location | **Indore** |
+> | Requirements | e-commerce website with product browsing, order placement and online payments |
+> | Missing information | Project timeline · Design preferences · Number of products |
+> | Urgency / Priority | Not stated → **Medium** ("requirements are well defined and a budget was given") |
+> | Lead | **Warm**, 56/100, with a written score breakdown |
+> | Reply | Professional draft that acknowledges the need and asks the follow-up questions for the missing information |
+>
+> *(An LLM's wording varies slightly from run to run; the values above are from a real run of the final system. The structure and the key facts — category, ₹50,000, Indore — are stable.)*
 
 ---
 
@@ -68,6 +98,13 @@ npm run dev                            # http://localhost:5173
 ```
 
 Open **http://localhost:5173/** (customer site) or **http://localhost:5173/admin/login** (admin console). Use `localhost`, not `127.0.0.1` — the backend's CORS list allows `localhost`.
+
+**Or with Docker** (one image serves the API and the React app; this is what Render runs):
+
+```bash
+docker build -t leadflow .
+docker run -p 10000:10000 -e GROQ_API_KEY=... -e ADMIN_PASSWORD=... -e JWT_SECRET=... leadflow   # http://localhost:10000
+```
 
 Windows shortcut once set up: `powershell -ExecutionPolicy Bypass -File scripts\start-dev.ps1` starts both servers.
 
@@ -107,7 +144,7 @@ The full list, with comments, is in [`backend/.env.example`](backend/.env.exampl
 | **C. Categorisation** (7 fixed categories) | Enforced as an enum: unsupported categories are rejected and retried; "Other Services" / low confidence → flagged for manual review |
 | **D. AI reply** (professional, next steps, follow-up questions, editable) | `response_service.py`; editable on the enquiry page, original AI draft always preserved |
 | **E. Admin dashboard** (all 6 stats + category chart; view details, analysis, reply; update status; search & filter) | `/admin` Overview, Enquiries, Enquiry detail |
-| **F. Database** (enquiries, analysis, category, priority, status, retrieval) | SQLite via SQLAlchemy, 9 tables — see [`docs/DATABASE.md`](docs/DATABASE.md) |
+| **F. Database** (enquiries, analysis, category, priority, status, retrieval) | SQLAlchemy, 9 tables (SQLite locally, PostgreSQL when deployed) — see [`docs/DATABASE.md`](docs/DATABASE.md) |
 | **Workflow steps 1–9** | `backend/app/services/workflow_service.py`; every step is logged and shown as a timeline — see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | **Priority Low / Medium / High** | Urgency comes from the AI; an explainable rule maps urgency + request completeness to a priority and stores the reason |
 
@@ -134,10 +171,21 @@ The full list, with comments, is in [`backend/.env.example`](backend/.env.exampl
 
 ## How it works (short version)
 
-```
-Customer form ─▶ FastAPI ─▶ save original ─▶ auto-assign ─▶ (background) ─▶ duplicate check ─▶ LLM #1: extract
-   ─▶ validate (Pydantic + grounding) ─▶ classify ─▶ priority ─▶ lead score ─▶ LLM #2: draft reply ─▶ follow-ups
-   ─▶ ONE database transaction ─▶ email alert ─▶ available through the REST API ─▶ React admin console
+```mermaid
+flowchart LR
+    C[Customer form] --> API[FastAPI]
+    API --> S[Save original enquiry]
+    S --> A[Auto-assign owner]
+    A --> BG{{Background workflow}}
+    BG --> D[Duplicate check]
+    D --> L1[LLM 1: extract facts]
+    L1 --> V[Validate: Pydantic + grounding]
+    V --> R[Classify, priority, lead score]
+    R --> L2[LLM 2: draft reply]
+    L2 --> F[Follow-ups]
+    F --> T[(One DB transaction)]
+    T --> E[Email alert]
+    T --> UI[React admin console]
 ```
 
 Design choices worth knowing (details in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/AI_MODEL.md`](docs/AI_MODEL.md)):
@@ -156,6 +204,19 @@ Design choices worth knowing (details in [`docs/ARCHITECTURE.md`](docs/ARCHITECT
 | AI | **Groq** (`openai/gpt-oss-120b`) primary, **Google Gemini** (`gemini-2.5-flash`) fallback | Both have free tiers; a common provider interface makes them swappable |
 | Frontend | **React + Vite + TypeScript + Tailwind CSS** | Fast, typed, component-based |
 | Auth | JWT, PBKDF2 password hashing | Stateless; no extra service |
+
+## API at a glance
+
+31 endpoints, documented live at `/docs` and in [`docs/openapi.json`](docs/openapi.json). Admin routes need a JWT (`Authorization: Bearer ...`); the customer form uses one public, rate-limited endpoint.
+
+| Area | Examples |
+|---|---|
+| Public | `POST /api/enquiries` (customer submits), `GET /health` |
+| Auth | `POST /api/auth/login`, `GET /api/auth/me` |
+| Enquiries | list with search, filters and pagination; detail; update status; edit reply; retry analysis; export CSV / Excel |
+| Dashboard and analytics | summary statistics, category and priority breakdowns, trends, funnel, AI usage |
+| Workflow | per-enquiry step history and timings |
+| Follow-ups, team | list, complete or dismiss reminders; team members and workload |
 
 ## Project structure
 
