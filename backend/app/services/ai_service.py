@@ -30,7 +30,7 @@ from app.services.providers.base import (
 )
 from app.services.providers.gemini import GeminiProvider
 from app.services.providers.groq import GroqProvider
-from app.utils.helpers import scrub_secrets
+from app.utils.helpers import looks_like_api_key, scrub_secrets
 from app.utils.json_parser import JSONParseError, parse_json_object
 
 logger = logging.getLogger("leadflow.ai")
@@ -197,14 +197,46 @@ def _build(name: str) -> LLMProvider:
     raise ValueError(f"Unknown AI provider '{name}' (supported: gemini, groq)")
 
 
+def _clean_provider_name(raw: str | None, setting: str) -> str | None:
+    """Return 'gemini' / 'groq', or None (with a warning that never prints the raw value: it may be a pasted API key)."""
+    name = (raw or "").strip().lower()
+    if name in ("gemini", "groq"):
+        return name
+    if looks_like_api_key(raw or ""):
+        why = "it looks like an API key: put keys in GROQ_API_KEY / GEMINI_API_KEY, and set this one to 'groq' or 'gemini'"
+    elif not name:
+        return None  # an empty fallback simply means "no fallback"
+    else:
+        why = "expected 'groq' or 'gemini'"
+    logger.warning("AI setting %s is invalid (%s); that provider is skipped", setting, why)
+    return None
+
+
 def get_provider_chain() -> list[LLMProvider]:
     if _provider_override is not None:
         return _provider_override
     s = get_settings()
-    names = [s.ai_primary_provider]
-    if s.ai_fallback_provider and s.ai_fallback_provider != s.ai_primary_provider:
-        names.append(s.ai_fallback_provider)
-    return [_build(n.strip().lower()) for n in names]
+    primary = _clean_provider_name(s.ai_primary_provider, "AI_PRIMARY_PROVIDER")
+    fallback = _clean_provider_name(s.ai_fallback_provider, "AI_FALLBACK_PROVIDER")
+    names = [n for n in (primary, fallback) if n]
+    names = [n for i, n in enumerate(names) if n not in names[:i]]  # no duplicates
+    if not names:
+        raise AIProcessingError(
+            "No valid AI provider is configured. Set AI_PRIMARY_PROVIDER to 'groq' or 'gemini' "
+            "(the API keys go in GROQ_API_KEY and GEMINI_API_KEY)."
+        )
+    return [_build(n) for n in names]
+
+
+def describe_configuration() -> str:
+    """One line for the startup log: which providers will be used and whether their keys are present (never the keys)."""
+    s = get_settings()
+    try:
+        chain = get_provider_chain()
+    except AppError as e:
+        return f"AI configuration problem: {e.message}"
+    parts = [f"{p.name}/{p.model} (key {'set' if getattr(p, '_api_key', None) else 'MISSING'})" for p in chain]
+    return "AI providers in order: " + ", ".join(parts)
 
 
 def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:

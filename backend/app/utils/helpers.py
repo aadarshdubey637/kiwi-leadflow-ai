@@ -29,13 +29,22 @@ def detect_prompt_injection(text: str) -> bool:
     return bool(_INJECTION_RE.search(text))
 
 
+# Shapes of real API keys (Groq, Google, OpenAI-style, xAI). Hidden from logs and error text even when the value was never
+# registered as a "secret" setting, e.g. a key pasted into the wrong environment variable.
+_KEY_SHAPES = re.compile(r"gsk_[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_\-]{30,}|AQ\.[A-Za-z0-9_\-]{20,}|sk-[A-Za-z0-9_\-]{30,}|xai-[A-Za-z0-9]{20,}")
+
+
+def looks_like_api_key(value: str) -> bool:
+    return bool(_KEY_SHAPES.search(value or ""))
+
+
 def scrub_secrets(text: str) -> str:
     """Remove any configured API key / JWT secret from text before it is logged or stored."""
     s = get_settings()
     for secret in (s.gemini_api_key, s.groq_api_key, s.jwt_secret, s.admin_password, s.smtp_password):
         if secret and len(secret) >= 6:
             text = text.replace(secret, "***")
-    return text
+    return _KEY_SHAPES.sub("***", text)
 
 
 def is_mostly_latin(text: str) -> bool:

@@ -465,3 +465,60 @@ def test_recorded_latency_excludes_time_spent_queueing(db_session, monkeypatch):
     _burst(db_session, 2, [FakeProvider("only")])
     times = [u.response_time for u in db_session.query(AIUsage).order_by(AIUsage.id)]
     assert len(times) == 2 and max(times) < 0.2  # the fake answers instantly; the 0.4s queue wait must not be counted
+
+
+# ---------- misconfiguration found on a live deployment: an API key pasted into AI_PRIMARY_PROVIDER ----------
+FAKE_KEY = "gsk_" + "AbCdEf0123456789" * 3
+
+
+def test_a_key_pasted_into_a_provider_setting_is_skipped_never_echoed_and_the_fallback_still_works(monkeypatch, caplog):
+    import logging
+
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "ai_primary_provider", FAKE_KEY)
+    monkeypatch.setattr(get_settings(), "ai_fallback_provider", "gemini")
+    with caplog.at_level(logging.WARNING, logger="leadflow.ai"):
+        chain = ai_service.get_provider_chain()
+    assert [p.name for p in chain] == ["gemini"]  # the broken primary is skipped; the app keeps working
+    assert "looks like an API key" in caplog.text and "AI_PRIMARY_PROVIDER" in caplog.text
+    assert FAKE_KEY not in caplog.text and FAKE_KEY.lower() not in caplog.text  # the key itself is never printed
+
+
+def test_no_valid_provider_gives_an_actionable_error_without_the_bad_value(monkeypatch):
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "ai_primary_provider", FAKE_KEY)
+    monkeypatch.setattr(get_settings(), "ai_fallback_provider", "")
+    with pytest.raises(AIProcessingError) as info:
+        ai_service.get_provider_chain()
+    assert "AI_PRIMARY_PROVIDER" in info.value.message and FAKE_KEY not in info.value.message
+
+
+def test_provider_names_are_forgiving_about_case_and_spaces_and_duplicates(monkeypatch):
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "ai_primary_provider", "  Groq ")
+    monkeypatch.setattr(get_settings(), "ai_fallback_provider", "GROQ")
+    assert [p.name for p in ai_service.get_provider_chain()] == ["groq"]  # same provider twice is collapsed
+
+
+def test_scrub_secrets_hides_key_shaped_text_even_if_never_configured_as_a_secret():
+    from app.utils.helpers import scrub_secrets
+
+    for key in (FAKE_KEY, FAKE_KEY.lower(), "AIza" + "x" * 35, "sk-" + "y" * 40):
+        assert key not in scrub_secrets(f"ValueError: Unknown AI provider '{key}'")
+    assert scrub_secrets("plain text stays") == "plain text stays"
+
+
+def test_startup_summary_reports_missing_keys_without_printing_any(monkeypatch):
+    from app.core.config import get_settings
+
+    cfg = get_settings()
+    monkeypatch.setattr(cfg, "ai_primary_provider", "groq")
+    monkeypatch.setattr(cfg, "ai_fallback_provider", "gemini")
+    monkeypatch.setattr(cfg, "groq_api_key", "gsk_secretvalue_should_never_print_0123456789")
+    monkeypatch.setattr(cfg, "gemini_api_key", None)
+    line = ai_service.describe_configuration()
+    assert "groq" in line and "key set" in line and "gemini" in line and "key MISSING" in line
+    assert "secretvalue" not in line

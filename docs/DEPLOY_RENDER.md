@@ -39,7 +39,8 @@ Every `git push` to the connected branch redeploys automatically.
 1. **Is the latest version live?** Open `https://<your-service>.onrender.com/health`. It shows `"commit": "abc1234"`: compare it with the newest commit on GitHub. If it differs, the new build is still running or failed (see the **Events** tab).
 2. **`ADMIN_PASSWORD` is the password.** Check it under **Environment**: no quotes around it (they would become part of the password), no leading/trailing spaces. After editing, Render redeploys; the admin's password is re-synced from it on every start. The username is `ADMIN_USERNAME` (preset to `admin`).
 3. **Read the logs** (service → **Logs**). At every start LeadFlow prints one line beginning `admin bootstrap:`: *created admin*, *password updated*, *already matches*, or a warning (e.g. *ADMIN_PASSWORD not set*, *wrapped in quotes*). The password itself is never logged.
-4. Too many wrong attempts give *"Too many requests"* for a minute (10 per minute per visitor): wait and retry.
+4. **AI shows "failed" on every enquiry?** Open the enquiry's **Workflow history** for the reason, and the startup log line `AI providers in order: ...` (it says whether each key is set or MISSING). The usual causes: `GROQ_API_KEY` / `GEMINI_API_KEY` blank, or a key pasted into the wrong variable. `AI_PRIMARY_PROVIDER` must be exactly `groq` or `gemini`, and keys go only in the two `*_API_KEY` variables (an invalid provider name is skipped with a warning; the key is never printed).
+5. Too many wrong attempts give *"Too many requests"* for a minute (10 per minute per visitor): wait and retry.
 
 ## Sharing an existing database safely
 

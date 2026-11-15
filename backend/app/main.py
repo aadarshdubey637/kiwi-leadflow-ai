@@ -16,7 +16,7 @@ from app.routes import (
     analytics_routes, auth_routes, dashboard_routes, enquiry_routes, followup_routes, monitoring_routes,
     system_routes, team_routes, workflow_routes,
 )
-from app.services import auth_service, workflow_service
+from app.services import ai_service, auth_service, workflow_service
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 settings = get_settings()
@@ -24,6 +24,7 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    logging.getLogger("leadflow").info(ai_service.describe_configuration())  # visible in the host's logs
     init_db()  # create tables on startup (Alembic can replace this when moving to PostgreSQL)
     with SessionLocal() as db:
         auth_service.seed_admin_from_env(db)
